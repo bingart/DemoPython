@@ -5,10 +5,7 @@ import json
 import random
 import requests
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.keys import Keys
-import stem
-import stem.connection
+from stem.control import Controller
 from file_helper import FileHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
@@ -45,7 +42,7 @@ class TorHelper:
         for c in circuits:
             cidList.append(c.id)    
         for cid in cidList:
-            controller.close_circuit(cid)
+            self._controller.close_circuit(cid)
         logging ('switch to next')
         
 class TaskHelper:
@@ -79,7 +76,7 @@ class TaskHelper:
 
 class TrafficHelper:
     def __init__(self, torHelper, taskHelper, uaFilePath, torHost, torPort):
-        self._torHelper = torHelperS
+        self._torHelper = torHelper
         self._taskHelper = taskHelper
         self._uaFilePath = uaFilePath
         self._uaList = FileHelper.loadFileList(self._uaFilePath)
@@ -106,13 +103,13 @@ class TrafficHelper:
     def invoke(self):
         task = self._taskHelper.getNextTask()
         if task == None or (not 'taskItemList' in task):
-            loggin.debug('no more task, return')
+            logging.debug('no more task, return')
             return
             
         # check all task item
         taskItemList = task['taskItemList']
         if taskItemList == None or len(taskItemList) == 0:
-            loggin.debug('empty task item list, return')
+            logging.debug('empty task item list, return')
             return
             
         # ip address
@@ -123,7 +120,7 @@ class TrafficHelper:
         # load all task item
         for taskItem in taskItemList:
             url = taskItem['url']
-            load(url)
+            self.load(url)
             
 def ipLookup():
     try:
