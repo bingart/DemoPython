@@ -10,7 +10,7 @@ from stem.control import Controller
 from file_helper import FileHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
-logging.basicConfig(format=FORMAT, filename='logger.log', level=logging.DEBUG)
+logging.basicConfig(format=FORMAT, filename='test.traffic.log', level=logging.DEBUG)
 logging.debug('Init: %s', 'started')
 logging.debug('debug message')
 
@@ -50,7 +50,7 @@ class TaskHelper:
     def __init__(self, taskFilePath):
         self._taskFilePath = taskFilePath
         self._taskList = FileHelper.loadFileList(self._taskFilePath)
-        self._taskIndex = 0
+        self._taskIndex = random.randint(1, len(self._taskList))
 
     def getNextTask(self):
         if True:
@@ -64,7 +64,7 @@ class TaskHelper:
             
             taskItem = {
                 'url': url,
-                'action': 'scroll',
+                'actionList': ['scroll 500', 'sleep 10'],
             }
             task = {
                 'taskItemList': [taskItem]
@@ -123,7 +123,7 @@ class TrafficHelper:
         # load all task item
         for taskItem in taskItemList:
             url = taskItem['url']
-            self.load(url)
+            self.load(url, 10)
             logging.debug('load task, url={0}'.format(url))
 
 def testIPLookup():
