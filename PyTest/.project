@@ -3,6 +3,7 @@
 	<name>PyTest</name>
 	<comment></comment>
 	<projects>
+		<project>PyLib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
