@@ -1,4 +1,6 @@
 #coding=utf-8
+#Deprecated
+
 import logging
 import time
 import json
