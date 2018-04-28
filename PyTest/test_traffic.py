@@ -86,7 +86,7 @@ class TrafficHelper:
         self._torHost = torHost
         self._torPort = torPort
         
-    def load(self, url):
+    def load(self, url, delay):
         try:
             serviceArgs = ['--proxy=127.0.0.1:9350', '--proxy-type=socks5']
             serviceArgs += ['--load-images=no'] 
@@ -95,10 +95,12 @@ class TrafficHelper:
             html = driver.page_source
             print(html)
             
-            for i in range(10):
-                time.sleep(1)
-                print('sleep')
-        
+            if delay > 0:
+                for i in range(delay):
+                    time.sleep(1)
+                    print('sleep at {0}'.format(i))
+        except Exception as err :
+            print(err)        
         finally:
             driver.close()
 
@@ -123,6 +125,7 @@ class TrafficHelper:
         for taskItem in taskItemList:
             url = taskItem['url']
             self.load(url)
+            logging.debug('load task, url={0}'.format(url))
 
 def testIPLookup():
     try:
