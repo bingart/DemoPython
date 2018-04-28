@@ -123,8 +123,8 @@ class TrafficHelper:
         for taskItem in taskItemList:
             url = taskItem['url']
             self.load(url)
-            
-def ipLookup():
+
+def testIPLookup():
     try:
         helper = TorHelper('127.0.0.1', 9351, 9350)
         ipAddress = helper.getIPAddress()
@@ -134,7 +134,21 @@ def ipLookup():
     finally:
         helper.close()
 
+def testTraffic():
+    try:
+        torHelper = TorHelper('127.0.0.1', 9351, 9350)
+        taskHelper = TaskHelper('./task.txt')
+        trafficHelper = TrafficHelper(torHelper, taskHelper, './ua.txt', '127.0.0.1', 9350)
+        trafficHelper.invoke()
+        
+    except Exception as err :
+        print(err)
+        logging.debug('test traffic error, {}', err)
+    finally:
+        torHelper.close()
+
 if __name__=="__main__":
     print("main")
-    #ipLookup()
+    #testIPLookup()
+    testTraffic()
     print("exit")
