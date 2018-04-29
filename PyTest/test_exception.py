@@ -44,7 +44,7 @@ class TorHelper:
             cidList.append(c.id)    
         for cid in cidList:
             self._controller.close_circuit(cid)
-        logging ('switch to next')
+        logging.debug ('reload')
         
 class TaskHelper:
     def __init__(self, taskFilePath):
@@ -128,11 +128,13 @@ class TrafficHelper:
 
 def testIPLookup(count = 1):
     try:
+        helper = TorHelper('127.0.0.1', 9351, 9350)
         for i in range(0, count, 1):
-            helper = TorHelper('127.0.0.1', 9351, 9350)
+            helper.reload()
+            logging.debug ('index={0}, reload'.format(i))
             ipAddress = helper.getIPAddress()
             logging.debug ('index={0}, ipAddress={1}'.format(i, ipAddress))
-            time.sleep(1)
+            time.sleep(5)
     except Exception as err :
         print(err)
     finally:
@@ -147,12 +149,12 @@ def testTraffic():
         
     except Exception as err :
         print(err)
-        logging.debug('test traffic error, {}', err)
+        logging.debug('test traffic error, {0}'.format(err))
     finally:
         torHelper.close()
 
 if __name__=="__main__":
     print("main")
-    #testIPLookup(1000)
-    testTraffic()
+    testIPLookup(10000)
+    #testTraffic()
     print("exit")
