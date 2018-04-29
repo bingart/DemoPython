@@ -126,11 +126,13 @@ class TrafficHelper:
             self.load(url, 10)
             logging.debug('load task, url={0}'.format(url))
 
-def testIPLookup():
+def testIPLookup(count = 1):
     try:
-        helper = TorHelper('127.0.0.1', 9351, 9350)
-        ipAddress = helper.getIPAddress()
-        print ('ipAddress={0}'.format(ipAddress))
+        for i in range(0, count, 1):
+            helper = TorHelper('127.0.0.1', 9351, 9350)
+            ipAddress = helper.getIPAddress()
+            logging.debug ('index={0}, ipAddress={1}'.format(i, ipAddress))
+            time.sleep(1)
     except Exception as err :
         print(err)
     finally:
@@ -151,6 +153,6 @@ def testTraffic():
 
 if __name__=="__main__":
     print("main")
-    #testIPLookup()
+    #testIPLookup(1000)
     testTraffic()
     print("exit")
