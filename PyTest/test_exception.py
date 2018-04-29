@@ -10,7 +10,7 @@ from stem.control import Controller
 from file_helper import FileHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
-logging.basicConfig(format=FORMAT, filename='test.traffic.log', level=logging.DEBUG)
+logging.basicConfig(format=FORMAT, filename='test.exception.log', level=logging.DEBUG)
 logging.debug('Init: %s', 'started')
 logging.debug('debug message')
 
