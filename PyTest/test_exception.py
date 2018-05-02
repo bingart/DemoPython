@@ -45,7 +45,21 @@ class TorHelper:
         for cid in cidList:
             self._controller.close_circuit(cid)
         logging.debug ('reload')
+    
+    def dump(self):
+        logging.debug("running version %s" % self._controller.get_version())
+        logging.debug("running pid %s" % self._controller.get_pid())
         
+        circuits = self._controller.get_circuits()
+        logging.debug('circuits=%d' % len(circuits))
+        for c in circuits:
+            logging.debug('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
+    
+        streams = self._controller.get_streams()
+        logging.debug('streams=' % len(streams))
+        for s in streams:
+            logging.debug('s: id={0}, circ_id={1}, source_address={2}, target_address={3}'.format(s.id, s.circ_id, s.source_address, s.target_address))
+    
 class TaskHelper:
     def __init__(self, taskFilePath):
         self._taskFilePath = taskFilePath
