@@ -54,15 +54,11 @@ class TorHelper:
         logging.debug('circuits=%d' % len(circuits))
         for c in circuits:
             logging.debug('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
-            path = ''
-            isFirst = True
+            path = '{0}'.format(c.purpose)
             for nodeItem in c.path:
-                if isFirst:
-                    path += ';' + nodeItem[0] + ',' + nodeItem[1]
-                    isFirst = False
-                else:
-                    path += nodeItem[0] + ',' + nodeItem[1]
-            logging.debug('c.path={0}'.format())
+                logging.debug ('nodeItem={0}'.format(nodeItem))
+                path += ';' + nodeItem[0] + ',' + nodeItem[1]
+            logging.debug('c.path={0}'.format(path))
                 
         streams = self._controller.get_streams()
         logging.debug('streams=%d' % len(streams))
@@ -115,14 +111,15 @@ class TrafficHelper:
             driver = webdriver.PhantomJS('/usr/bin/phantomjs', service_args=serviceArgs)
             driver.get(url)
             html = driver.page_source
-            print(html)
+            logging.debug('html.len={0}, html={1}'.format(len(html), html[0, 16]))
             
             if delay > 0:
                 for i in range(delay):
                     time.sleep(1)
-                    print('sleep at {0}'.format(i))
+                    logging.debug('sleep at {0}'.format(i))
         except Exception as err :
-            print(err)        
+            print(err)
+            logging.debug('load exception, {0}'.format(err))        
         finally:
             driver.close()
 
@@ -161,6 +158,7 @@ def testIPLookup(count = 1):
             time.sleep(5)
     except Exception as err :
         print(err)
+        logging.debug('testIPLookup exception, {0}'.format(err))        
     finally:
         helper.close()
 
