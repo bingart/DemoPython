@@ -54,9 +54,18 @@ class TorHelper:
         logging.debug('circuits=%d' % len(circuits))
         for c in circuits:
             logging.debug('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
-    
+            path = ''
+            isFirst = True
+            for nodeItem in c.path:
+                if isFirst:
+                    path += ';' + nodeItem[0] + ',' + nodeItem[1]
+                    isFirst = False
+                else:
+                    path += nodeItem[0] + ',' + nodeItem[1]
+            logging.debug('c.path={0}'.format())
+                
         streams = self._controller.get_streams()
-        logging.debug('streams=' % len(streams))
+        logging.debug('streams=%d' % len(streams))
         for s in streams:
             logging.debug('s: id={0}, circ_id={1}, source_address={2}, target_address={3}'.format(s.id, s.circ_id, s.source_address, s.target_address))
     
@@ -148,6 +157,7 @@ def testIPLookup(count = 1):
             logging.debug ('index={0}, reload'.format(i))
             ipAddress = helper.getIPAddress()
             logging.debug ('index={0}, ipAddress={1}'.format(i, ipAddress))
+            helper.dump()
             time.sleep(5)
     except Exception as err :
         print(err)
