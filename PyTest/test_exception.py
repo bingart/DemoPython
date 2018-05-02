@@ -177,6 +177,6 @@ def testTraffic():
 
 if __name__=="__main__":
     print("main")
-    testIPLookup(10000)
+    testIPLookup(20000)
     #testTraffic()
     print("exit")
