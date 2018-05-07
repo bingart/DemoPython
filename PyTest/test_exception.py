@@ -46,6 +46,18 @@ class TorHelper:
             self._controller.close_circuit(cid)
         logging.debug ('reload')
     
+    def getPathInfo(self):
+        circuits = self._controller.get_circuits()
+        logging.debug('circuits=%d' % len(circuits))
+        for c in circuits:
+            logging.debug('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
+            path = '{0}'.format(c.purpose)
+            for nodeItem in c.path:
+                logging.debug ('nodeItem={0}'.format(nodeItem))
+                path += ';' + nodeItem[0] + ',' + nodeItem[1]
+            logging.debug('c.path={0}'.format(path))
+        
+    
     def dump(self):
         logging.debug("running version %s" % self._controller.get_version())
         logging.debug("running pid %s" % self._controller.get_pid())
