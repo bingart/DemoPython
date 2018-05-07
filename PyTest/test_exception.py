@@ -185,7 +185,7 @@ class TrafficHelper:
 
 def createOrUpdateNode(mysqlHelper, node, position, region):
     sql = 'SELECT category, title, finger FROM node WHERE category = %s AND finger = %s'
-    doc = mysqlHelper.queryOne(sql, (node['finger']))
+    doc = mysqlHelper.queryOne(sql, (node['category'], node['finger']))
     if doc != None:
         # update, TODO
         print()
@@ -203,7 +203,8 @@ def createOrUpdateNode(mysqlHelper, node, position, region):
                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                 'FETCHED',
-                0))
+                0)
+        )
 
 def testIPLookup(count = 1):
     try:
