@@ -48,15 +48,32 @@ class TorHelper:
     
     def getPathInfo(self):
         circuits = self._controller.get_circuits()
-        logging.debug('circuits=%d' % len(circuits))
         for c in circuits:
-            logging.debug('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
-            path = '{0}'.format(c.purpose)
-            for nodeItem in c.path:
-                logging.debug ('nodeItem={0}'.format(nodeItem))
-                path += ';' + nodeItem[0] + ',' + nodeItem[1]
-            logging.debug('c.path={0}'.format(path))
-        
+            if len(c.path) > 1:
+                lastNodeItem = None
+                firstNodeItem = None
+                path = ''
+                for nodeItem in c.path:
+                    if firstNodeItem == None:
+                        firstNodeItem = nodeItem
+                    lastNodeItem = nodeItem
+                    path += lastNodeItem[0] + ';'
+                
+                if firstNodeItem != None:
+                    firstNode = {
+                        'finger': firstNodeItem[0],
+                        'title': firstNodeItem[1],
+                        'path': path,
+                    }
+                
+                if lastNodeItem != None:
+                    lastNode = {
+                        'finger': lastNodeItem[0],
+                        'title': lastNodeItem[1],
+                        'path': path,
+                    }
+                
+        return [firstNode, lastNode]
     
     def dump(self):
         logging.debug("running version %s" % self._controller.get_version())
