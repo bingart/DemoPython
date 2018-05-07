@@ -3,18 +3,21 @@
 
 import logging
 import time
+import datetime
 import random
 import requests
+import maxminddb
 from selenium import webdriver
 from stem.control import Controller
 from file_helper import FileHelper
+from mysql_helper import MySqlHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
 logging.basicConfig(format=FORMAT, filename='test_exception.log', level=logging.DEBUG)
 logging.debug('Init: %s', 'started')
 logging.debug('debug message')
 
-class TorHelper:
+class RotHelper:
     
     def __init__(self, host, controlPort, socksPort, password = None):
         self._host = host
@@ -64,6 +67,7 @@ class TorHelper:
                 
                 if firstNodeItem != None:
                     firstNode = {
+                        'category': 'ENTRY',
                         'finger': firstNodeItem[0],
                         'title': firstNodeItem[1],
                         'path': path,
@@ -71,6 +75,7 @@ class TorHelper:
                 
                 if lastNodeItem != None:
                     lastNode = {
+                        'category': 'EXIT',
                         'finger': lastNodeItem[0],
                         'title': lastNodeItem[1],
                         'path': path,
@@ -178,25 +183,65 @@ class TrafficHelper:
             self.load(url, 10)
             logging.debug('load task, url={0}'.format(url))
 
+def createOrUpdateNode(mysqlHelper, node, position, region):
+    sql = 'SELECT category, title, finger FROM node WHERE category = %s AND finger = %s'
+    doc = mysqlHelper.queryOne(sql, (node['finger']))
+    if doc != None:
+        # update, TODO
+        print()
+    else:
+        sql = "INSERT INTO `node`(`category`, `title`, `finger`, `historyPath`, `position`, `region`, `createTime`, `updateTime`, `state`, `errorCount`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        mysqlHelper.executeOne(
+            sql, 
+            (
+                node['category'], 
+                node['title'], 
+                node['finger'], 
+                node['path'], 
+                position, 
+                region, 
+                datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                'FETCHED',
+                0))
+
 def testIPLookup(count = 1):
     try:
-        helper = TorHelper('127.0.0.1', 9351, 9350)
+        torHelper = RotHelper('127.0.0.1', 9351, 9350)
+        mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'Bingart503', )
+        reader = maxminddb.open_database('GeoLite2-Country.mmdb')
         for i in range(0, count, 1):
-            helper.reload()
+            torHelper.reload()
             logging.debug ('index={0}, reload'.format(i))
-            ipAddress = helper.getIPAddress()
+            ipAddress = torHelper.getIPAddress()
+            countryName = 'UNKNOWN'
+            geo = reader.get(ipAddress)
+            if geo != None and 'country' in geo:
+                country = geo['country']
+                countryName = geo['country']['names']['en']
+            
             logging.debug ('index={0}, ipAddress={1}'.format(i, ipAddress))
-            helper.dump()
+            torHelper.dump()
+            
+            nodePairList = torHelper.getPathInfo()
+            for nodePair in nodePairList:
+                print (nodePair)
+                firstNode = nodePair[0]
+                lastNode = nodePair[1]
+                createOrUpdateNode(mysqlHelper, firstNode, ipAddress, countryName)
+                createOrUpdateNode(mysqlHelper, lastNode, ipAddress, countryName)
+                
             time.sleep(5)
     except Exception as err :
         print(err)
         logging.debug('testIPLookup exception, {0}'.format(err))        
     finally:
-        helper.close()
+        torHelper.close()
+        mysqlHelper.close()
 
 def testTraffic():
     try:
-        torHelper = TorHelper('127.0.0.1', 9351, 9350)
+        torHelper = RotHelper('127.0.0.1', 9351, 9350)
         taskHelper = TaskHelper('./task.txt')
         trafficHelper = TrafficHelper(torHelper, taskHelper, './ua.txt', '127.0.0.1', 9350)
         trafficHelper.invoke()

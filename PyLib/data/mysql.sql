@@ -8,7 +8,7 @@ CREATE TABLE `node` (
     `region` varchar(64) NULL,			/* NULL for ENTRY */
     `createTime` datetime NOT NULL,
     `updateTime` datetime NOT NULL,
-    `state` varchar(64) NOT NULL,		/* CREATED, CLOSED */
+    `state` varchar(64) NOT NULL,		/* CREATED, FETCHED, CLOSED */
     `errorCount` bigint(20) NOT NULL,
     `reserve` varchar(1024) NULL,
     PRIMARY KEY (`id`)
