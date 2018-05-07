@@ -48,10 +48,13 @@ class TorHelper:
     
     def getPathInfo(self):
         circuits = self._controller.get_circuits()
+        nodePairList = []
         for c in circuits:
             if len(c.path) > 1:
-                lastNodeItem = None
                 firstNodeItem = None
+                lastNodeItem = None
+                firstNode = None
+                lastNode = None
                 path = ''
                 for nodeItem in c.path:
                     if firstNodeItem == None:
@@ -72,8 +75,8 @@ class TorHelper:
                         'title': lastNodeItem[1],
                         'path': path,
                     }
-                
-        return [firstNode, lastNode]
+                nodePairList.append([firstNode, lastNode])
+        return nodePairList
     
     def dump(self):
         logging.debug("running version %s" % self._controller.get_version())
