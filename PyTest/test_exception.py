@@ -101,7 +101,33 @@ class RotHelper:
         logging.debug('streams=%d' % len(streams))
         for s in streams:
             logging.debug('s: id={0}, circ_id={1}, source_address={2}, target_address={3}'.format(s.id, s.circ_id, s.source_address, s.target_address))
+
+    def closeCircuit(self, cid):
+        self._controller.close_circuit(cid)
+        logging.debug ('close circuit {0}'.format(cid))
     
+    def closeAllCircuit(self):
+        circuits = self._controller.get_circuits()
+        logging.debug('circuits=')
+        logging.debug(circuits)
+        cidList = []
+        for c in circuits:
+            cidList.append(c.id)
+    
+        for cid in cidList:
+            self._controller.close_circuit(cid)
+        logging.debug ('close all circuit')
+    
+    def getConf(self, key):
+        value = self._controller.get_conf(key)
+        logging.debug ('get_config: key={0}, value={1}', key, value)
+    
+    def setConf(self, key, value):
+        self._controller.set_conf(key, value)
+        logging.debug ('setConfig: key={0}, value={1}', key, value)
+        newValue = self.getConf(key)
+        logging.debug ('setConfig: key={0}, new value={1}', key, newValue)
+        
 class TaskHelper:
     def __init__(self, taskFilePath):
         self._taskFilePath = taskFilePath
