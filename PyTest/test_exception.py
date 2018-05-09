@@ -239,6 +239,7 @@ def testIPLookup(count = 1):
         geoHelper = GeoHelper('GeoLite2-Country.mmdb')
         for i in range(0, count, 1):
             rotHelper.reload()
+            #rotHelper.setConf('ExitNodes', 'US,UK,FR')
             logging.debug ('index={0}, reload'.format(i))
             ipAddress = rotHelper.getIPAddress()
             countryName, countryCode = geoHelper.getCountryInfo(ipAddress)            
