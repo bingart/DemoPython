@@ -6,11 +6,11 @@ import time
 import datetime
 import random
 import requests
-import maxminddb
 from selenium import webdriver
 from stem.control import Controller
 from file_helper import FileHelper
 from mysql_helper import MySqlHelper
+from geo_helper import GeoHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
 logging.basicConfig(format=FORMAT, filename='test_exception.log', level=logging.DEBUG)
@@ -158,8 +158,8 @@ class TaskHelper:
             return None
 
 class TrafficHelper:
-    def __init__(self, torHelper, taskHelper, uaFilePath, torHost, torPort):
-        self._torHelper = torHelper
+    def __init__(self, rotHelper, taskHelper, uaFilePath, torHost, torPort):
+        self._rotHelper = rotHelper
         self._taskHelper = taskHelper
         self._uaFilePath = uaFilePath
         self._uaList = FileHelper.loadFileList(self._uaFilePath)
@@ -199,8 +199,8 @@ class TrafficHelper:
             return
             
         # ip address
-        self._torHelper.reload()
-        ipAddress = self._torHelper.getIPAddress()
+        self._rotHelper.reload()
+        ipAddress = self._rotHelper.getIPAddress()
         logging.debug('pre-invoking: ipAddress={0}'.format(ipAddress))
 
         # load all task item
@@ -234,23 +234,19 @@ def createOrUpdateNode(mysqlHelper, node, position, region):
 
 def testIPLookup(count = 1):
     try:
-        torHelper = RotHelper('127.0.0.1', 9351, 9350)
+        rotHelper = RotHelper('127.0.0.1', 9351, 9350)
         mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'Bingart503', )
-        reader = maxminddb.open_database('GeoLite2-Country.mmdb')
+        geoHelper = GeoHelper('GeoLite2-Country.mmdb')
         for i in range(0, count, 1):
-            torHelper.reload()
+            rotHelper.reload()
             logging.debug ('index={0}, reload'.format(i))
-            ipAddress = torHelper.getIPAddress()
-            countryName = 'UNKNOWN'
-            geo = reader.get(ipAddress)
-            if geo != None and 'country' in geo:
-                country = geo['country']
-                countryName = geo['country']['names']['en']
+            ipAddress = rotHelper.getIPAddress()
+            countryName, countryCode = geoHelper.getCountryInfo(ipAddress)            
+            logging.debug ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
+                i, ipAddress, countryName, countryCode))
+            rotHelper.dump()
             
-            logging.debug ('index={0}, ipAddress={1}'.format(i, ipAddress))
-            torHelper.dump()
-            
-            nodePairList = torHelper.getPathInfo()
+            nodePairList = rotHelper.getPathInfo()
             for nodePair in nodePairList:
                 print (nodePair)
                 firstNode = nodePair[0]
@@ -263,21 +259,22 @@ def testIPLookup(count = 1):
         print(err)
         logging.debug('testIPLookup exception, {0}'.format(err))        
     finally:
-        torHelper.close()
         mysqlHelper.close()
+        geoHelper.close()
+        rotHelper.close()
 
 def testTraffic():
     try:
-        torHelper = RotHelper('127.0.0.1', 9351, 9350)
+        rotHelper = RotHelper('127.0.0.1', 9351, 9350)
         taskHelper = TaskHelper('./task.txt')
-        trafficHelper = TrafficHelper(torHelper, taskHelper, './ua.txt', '127.0.0.1', 9350)
+        trafficHelper = TrafficHelper(rotHelper, taskHelper, './ua.txt', '127.0.0.1', 9350)
         trafficHelper.invoke()
         
     except Exception as err :
         print(err)
         logging.debug('test traffic error, {0}'.format(err))
     finally:
-        torHelper.close()
+        rotHelper.close()
 
 if __name__=="__main__":
     print("main")

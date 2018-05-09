@@ -19,7 +19,7 @@ class GeoHelper:
             countryCode = country['iso_code']
             return [countryName, countryCode]
         else:
-            return [None, None]
+            return ['UNKNOWN', 'NA']
 
 if __name__=="__main__":
     print("main")
