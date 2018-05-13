@@ -63,7 +63,7 @@ def main():
     try:
         controller.authenticate()
     except stem.connection.MissingPassword:
-        pw = ''
+        sys.exit(1)
 
     if len(sys.argv) == 1:
         print ('usage: py dump')
