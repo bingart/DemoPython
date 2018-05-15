@@ -128,11 +128,37 @@ class RotHelper:
         newValue = self.getConf(key)
         logging.debug ('setConfig: key={0}, new value={1}', key, newValue)
         
-class TaskHelper:
-    def __init__(self, taskFilePath):
+class TrafficHelper:
+    def __init__(self, taskFilePath, uaFilePath, torHost, torPort):
         self._taskFilePath = taskFilePath
         self._taskList = FileHelper.loadFileList(self._taskFilePath)
         self._taskIndex = random.randint(1, len(self._taskList))
+
+        self._uaFilePath = uaFilePath
+        self._uaList = FileHelper.loadFileList(self._uaFilePath)
+        self._uaIndex = random.randint(1, len(self._uaList))
+        
+        self._torHost = torHost
+        self._torPort = torPort
+        
+    def load(self, url, delay):
+        try:
+            serviceArgs = ['--proxy={0}:{1}'.format(self._torHost, self._torPort), '--proxy-type=socks5']
+            serviceArgs += ['--load-images=no'] 
+            driver = webdriver.PhantomJS('/usr/bin/phantomjs', service_args=serviceArgs)
+            driver.get(url)
+            html = driver.page_source
+            logging.debug('html.len={0}'.format(len(html)))
+            
+            if delay > 0:
+                for i in range(delay):
+                    time.sleep(1)
+                    logging.debug('sleep at {0}'.format(i))
+        except Exception as err :
+            print(err)
+            logging.debug('load exception, {0}'.format(err))        
+        finally:
+            driver.close()
 
     def getNextTask(self):
         if True:
@@ -157,37 +183,8 @@ class TaskHelper:
             # TODO
             return None
 
-class TrafficHelper:
-    def __init__(self, rotHelper, taskHelper, uaFilePath, torHost, torPort):
-        self._rotHelper = rotHelper
-        self._taskHelper = taskHelper
-        self._uaFilePath = uaFilePath
-        self._uaList = FileHelper.loadFileList(self._uaFilePath)
-        self._uaIndex = random.randint(1, len(self._uaList))
-        self._torHost = torHost
-        self._torPort = torPort
-        
-    def load(self, url, delay):
-        try:
-            serviceArgs = ['--proxy=127.0.0.1:9350', '--proxy-type=socks5']
-            serviceArgs += ['--load-images=no'] 
-            driver = webdriver.PhantomJS('/usr/bin/phantomjs', service_args=serviceArgs)
-            driver.get(url)
-            html = driver.page_source
-            logging.debug('html.len={0}, html={1}'.format(len(html), html[0, 16]))
-            
-            if delay > 0:
-                for i in range(delay):
-                    time.sleep(1)
-                    logging.debug('sleep at {0}'.format(i))
-        except Exception as err :
-            print(err)
-            logging.debug('load exception, {0}'.format(err))        
-        finally:
-            driver.close()
-
     def invoke(self):
-        task = self._taskHelper.getNextTask()
+        task = self.getNextTask()
         if task == None or (not 'taskItemList' in task):
             logging.debug('no more task, return')
             return
@@ -198,15 +195,10 @@ class TrafficHelper:
             logging.debug('empty task item list, return')
             return
             
-        # ip address
-        self._rotHelper.reload()
-        ipAddress = self._rotHelper.getIPAddress()
-        logging.debug('pre-invoking: ipAddress={0}'.format(ipAddress))
-
         # load all task item
         for taskItem in taskItemList:
             url = taskItem['url']
-            self.load(url, 10)
+            self.load(url, 1)
             logging.debug('load task, url={0}'.format(url))
 
 def createOrUpdateNode(mysqlHelper, node, position, region):
@@ -237,6 +229,7 @@ def testIPLookup(count = 1):
         rotHelper = RotHelper('127.0.0.1', 9351, 9350)
         mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'Bingart503', )
         geoHelper = GeoHelper('GeoLite2-Country.mmdb')
+        trafficHelper = TrafficHelper('./task.txt', './ua.txt', '127.0.0.1', 9350)
         for i in range(0, count, 1):
             rotHelper.reload()
             #rotHelper.setConf('ExitNodes', 'US,UK,FR')
@@ -256,6 +249,9 @@ def testIPLookup(count = 1):
                 createOrUpdateNode(mysqlHelper, lastNode, ipAddress, countryName)
                 
             time.sleep(5)
+            
+            trafficHelper.invoke()
+            
     except Exception as err :
         print(err)
         logging.debug('testIPLookup exception, {0}'.format(err))        
@@ -267,10 +263,9 @@ def testIPLookup(count = 1):
 def testTraffic():
     try:
         rotHelper = RotHelper('127.0.0.1', 9351, 9350)
-        taskHelper = TaskHelper('./task.txt')
-        trafficHelper = TrafficHelper(rotHelper, taskHelper, './ua.txt', '127.0.0.1', 9350)
+        trafficHelper = TrafficHelper('./task.txt', './ua.txt', '127.0.0.1', 9350)
+        rotHelper.reload()
         trafficHelper.invoke()
-        
     except Exception as err :
         print(err)
         logging.debug('test traffic error, {0}'.format(err))
