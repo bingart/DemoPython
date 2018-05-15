@@ -13,9 +13,8 @@ from mysql_helper import MySqlHelper
 from geo_helper import GeoHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
-logging.basicConfig(format=FORMAT, filename='test_exception.log', level=logging.DEBUG)
-logging.debug('Init: %s', 'started')
-logging.debug('debug message')
+logging.basicConfig(format=FORMAT, filename='test_exception.log', level=logging.INFO)
+logging.info('Init: %s', 'started')
 
 class RotHelper:
     
@@ -26,7 +25,7 @@ class RotHelper:
         self._password = password
         self._controller = Controller.from_port(address=self._host, port=self._controlPort)
         self._controller.authenticate()
-        logging.debug('created, host={0}, controlPort={1}, socksPort={2}'.format(self._host, self._controlPort, self._socksPort))
+        logging.info('created, host={0}, controlPort={1}, socksPort={2}'.format(self._host, self._controlPort, self._socksPort))
 
     def close(self):
         self._controller.close()
@@ -47,7 +46,7 @@ class RotHelper:
             cidList.append(c.id)    
         for cid in cidList:
             self._controller.close_circuit(cid)
-        logging.debug ('reload')
+        logging.info ('reload')
     
     def getPathInfo(self):
         circuits = self._controller.get_circuits()
@@ -84,49 +83,49 @@ class RotHelper:
         return nodePairList
     
     def dump(self):
-        logging.debug("running version %s" % self._controller.get_version())
-        logging.debug("running pid %s" % self._controller.get_pid())
+        logging.info("running version %s" % self._controller.get_version())
+        logging.info("running pid %s" % self._controller.get_pid())
         
         circuits = self._controller.get_circuits()
-        logging.debug('circuits=%d' % len(circuits))
+        logging.info('circuits=%d' % len(circuits))
         for c in circuits:
-            logging.debug('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
+            logging.info('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
             path = '{0}'.format(c.purpose)
             for nodeItem in c.path:
-                logging.debug ('nodeItem={0}'.format(nodeItem))
+                logging.info ('nodeItem={0}'.format(nodeItem))
                 path += ';' + nodeItem[0] + ',' + nodeItem[1]
-            logging.debug('c.path={0}'.format(path))
+            logging.info('c.path={0}'.format(path))
                 
         streams = self._controller.get_streams()
-        logging.debug('streams=%d' % len(streams))
+        logging.info('streams=%d' % len(streams))
         for s in streams:
-            logging.debug('s: id={0}, circ_id={1}, source_address={2}, target_address={3}'.format(s.id, s.circ_id, s.source_address, s.target_address))
+            logging.info('s: id={0}, circ_id={1}, source_address={2}, target_address={3}'.format(s.id, s.circ_id, s.source_address, s.target_address))
 
     def closeCircuit(self, cid):
         self._controller.close_circuit(cid)
-        logging.debug ('close circuit {0}'.format(cid))
+        logging.info ('close circuit {0}'.format(cid))
     
     def closeAllCircuit(self):
         circuits = self._controller.get_circuits()
-        logging.debug('circuits=')
-        logging.debug(circuits)
+        logging.info('circuits=')
+        logging.info(circuits)
         cidList = []
         for c in circuits:
             cidList.append(c.id)
     
         for cid in cidList:
             self._controller.close_circuit(cid)
-        logging.debug ('close all circuit')
+        logging.info ('close all circuit')
     
     def getConf(self, key):
         value = self._controller.get_conf(key)
-        logging.debug ('get_config: key={0}, value={1}', key, value)
+        logging.info ('get_config: key={0}, value={1}', key, value)
     
     def setConf(self, key, value):
         self._controller.set_conf(key, value)
-        logging.debug ('setConfig: key={0}, value={1}', key, value)
+        logging.info ('setConfig: key={0}, value={1}', key, value)
         newValue = self.getConf(key)
-        logging.debug ('setConfig: key={0}, new value={1}', key, newValue)
+        logging.info ('setConfig: key={0}, new value={1}', key, newValue)
         
 class TrafficHelper:
     def __init__(self, taskFilePath, uaFilePath, torHost, torPort):
@@ -148,15 +147,17 @@ class TrafficHelper:
             driver = webdriver.PhantomJS('/usr/bin/phantomjs', service_args=serviceArgs)
             driver.get(url)
             html = driver.page_source
-            logging.debug('html.len={0}'.format(len(html)))
+            logging.info('load ok, url={0}, html.len={1}'.format(url, len(html)))
+            print('load ok, url={0}, html.len={1}'.format(url, len(html)))
             
             if delay > 0:
                 for i in range(delay):
                     time.sleep(1)
-                    logging.debug('sleep at {0}'.format(i))
+                    logging.info('sleep at {0}'.format(i))
+                    print('sleep at {0}'.format(i))
         except Exception as err :
             print(err)
-            logging.debug('load exception, {0}'.format(err))        
+            logging.info('load exception, url={0}, err={1}'.format(url, err))        
         finally:
             driver.close()
 
@@ -186,20 +187,20 @@ class TrafficHelper:
     def invoke(self):
         task = self.getNextTask()
         if task == None or (not 'taskItemList' in task):
-            logging.debug('no more task, return')
+            logging.info('no more task, return')
             return
             
         # check all task item
         taskItemList = task['taskItemList']
         if taskItemList == None or len(taskItemList) == 0:
-            logging.debug('empty task item list, return')
+            logging.info('empty task item list, return')
             return
             
         # load all task item
         for taskItem in taskItemList:
             url = taskItem['url']
-            self.load(url, 1)
-            logging.debug('load task, url={0}'.format(url))
+            self.load(url, 5)
+            logging.info('load task, url={0}'.format(url))
 
 def createOrUpdateNode(mysqlHelper, node, position, region):
     sql = 'SELECT category, title, finger FROM node WHERE category = %s AND finger = %s'
@@ -229,14 +230,16 @@ def testIPLookup(count = 1):
         rotHelper = RotHelper('127.0.0.1', 9351, 9350)
         mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'Bingart503', )
         geoHelper = GeoHelper('GeoLite2-Country.mmdb')
-        trafficHelper = TrafficHelper('./task.txt', './ua.txt', '127.0.0.1', 9350)
+        trafficHelper = TrafficHelper('./task.txt', './mobile_ua_list.txt', '127.0.0.1', 9350)
         for i in range(0, count, 1):
             rotHelper.reload()
             #rotHelper.setConf('ExitNodes', 'US,UK,FR')
-            logging.debug ('index={0}, reload'.format(i))
+            logging.info ('index={0}, reload'.format(i))
             ipAddress = rotHelper.getIPAddress()
             countryName, countryCode = geoHelper.getCountryInfo(ipAddress)            
-            logging.debug ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
+            logging.info ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
+                i, ipAddress, countryName, countryCode))
+            print('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
                 i, ipAddress, countryName, countryCode))
             rotHelper.dump()
             
@@ -254,7 +257,7 @@ def testIPLookup(count = 1):
             
     except Exception as err :
         print(err)
-        logging.debug('testIPLookup exception, {0}'.format(err))        
+        logging.info('testIPLookup exception, {0}'.format(err))        
     finally:
         mysqlHelper.close()
         geoHelper.close()
@@ -263,17 +266,17 @@ def testIPLookup(count = 1):
 def testTraffic():
     try:
         rotHelper = RotHelper('127.0.0.1', 9351, 9350)
-        trafficHelper = TrafficHelper('./task.txt', './ua.txt', '127.0.0.1', 9350)
+        trafficHelper = TrafficHelper('./task.txt', './mobile_ua_list.txt', '127.0.0.1', 9350)
         rotHelper.reload()
         trafficHelper.invoke()
     except Exception as err :
         print(err)
-        logging.debug('test traffic error, {0}'.format(err))
+        logging.info('test traffic error, {0}'.format(err))
     finally:
         rotHelper.close()
 
 if __name__=="__main__":
     print("main")
-    testIPLookup(20000)
+    testIPLookup(10000)
     #testTraffic()
     print("exit")
