@@ -1,5 +1,6 @@
 # coding=utf-8
 from pymongo import MongoClient
+from pymongo import ASCENDING, DESCENDING
 from log_helper import LogHelper
 
 class MongoHelper:
@@ -29,9 +30,16 @@ class MongoHelper:
     def findOneByFilter(self, theFilter):
         return self.collection.find_one(theFilter)
     
-    def findPage(self, theFilter, offset, count):
+    def findPage(self, theFilter, offset, count, sortField = None, orderType = 'asc'):
         docList = []
-        cursor = self.collection.find(theFilter, skip=offset, limit=count);    
+        if sortField == None:
+            cursor = self.collection.find(theFilter, skip=offset, limit=count);
+        else:
+            if orderType == 'asc':
+                order = ASCENDING
+            else:
+                order = DESCENDING
+            cursor = self.collection.find(theFilter, skip=offset, limit=count).sort(sortField, order);
         for doc in cursor:
             docList.append(doc)
         return docList
