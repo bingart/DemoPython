@@ -5,6 +5,7 @@ import logging
 import time
 import datetime
 import random
+from random import randint
 import requests
 from selenium import webdriver
 from stem.control import Controller
@@ -128,7 +129,7 @@ class RotHelper:
         logging.info ('setConfig: key={0}, new value={1}', key, newValue)
         
 class TrafficHelper:
-    def __init__(self, taskFilePath, uaFilePath, torHost, torPort):
+    def __init__(self, taskFilePath, uaFilePath, rotHost, rotPort):
         self._taskFilePath = taskFilePath
         self._taskList = FileHelper.loadFileList(self._taskFilePath)
         self._taskIndex = random.randint(1, len(self._taskList))
@@ -137,18 +138,23 @@ class TrafficHelper:
         self._uaList = FileHelper.loadFileList(self._uaFilePath)
         self._uaIndex = random.randint(1, len(self._uaList))
         
-        self._torHost = torHost
-        self._torPort = torPort
+        self._rotHost = rotHost
+        self._rotPort = rotPort
         
     def load(self, url, delay):
         try:
-            serviceArgs = ['--proxy={0}:{1}'.format(self._torHost, self._torPort), '--proxy-type=socks5']
+            dcap = dict(webdriver.DesiredCapabilities.PHANTOMJS)
+            ua = self.getNextUA()
+            dcap["phantomjs.page.settings.userAgent"] = ua
+            dcap["phantomjs.page.settings.resourceTimeout"] = 30*1000 # in ms
+            serviceArgs = ['--proxy={0}:{1}'.format(self._rotHost, self._rotPort), '--proxy-type=socks5']
             serviceArgs += ['--load-images=no'] 
-            driver = webdriver.PhantomJS('/usr/bin/phantomjs', service_args=serviceArgs)
+            driver = webdriver.PhantomJS('/usr/bin/phantomjs', desired_capabilities=dcap, service_args=serviceArgs)
+            driver.set_window_size(414, 736)
             driver.get(url)
             html = driver.page_source
-            logging.info('load ok, url={0}, html.len={1}'.format(url, len(html)))
-            print('load ok, url={0}, html.len={1}'.format(url, len(html)))
+            logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
+            print('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             
             if delay > 0:
                 for i in range(delay):
@@ -184,6 +190,22 @@ class TrafficHelper:
             # TODO
             return None
 
+    def getNextUA(self):
+        if True:
+            if len(self._uaList) == 0:
+                return None
+            
+            ua = self._uaList[self._uaIndex]
+            self._uaIndex += 1
+            if self._uaIndex >= len(self._uaList):
+                self._uaIndex = 0
+
+            return ua
+        else:
+            # get ua from service
+            # TODO
+            return None
+
     def invoke(self):
         task = self.getNextTask()
         if task == None or (not 'taskItemList' in task):
@@ -199,7 +221,7 @@ class TrafficHelper:
         # load all task item
         for taskItem in taskItemList:
             url = taskItem['url']
-            self.load(url, 5)
+            self.load(url, randint(10,20))
             logging.info('load task, url={0}'.format(url))
 
 def createOrUpdateNode(mysqlHelper, node, position, region):
@@ -277,6 +299,6 @@ def testTraffic():
 
 if __name__=="__main__":
     print("main")
-    testIPLookup(10000)
+    testIPLookup(20000)
     #testTraffic()
     print("exit")
