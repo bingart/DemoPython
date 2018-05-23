@@ -5,7 +5,6 @@ import logging
 import time
 import datetime
 import random
-import os
 import signal
 from random import randint
 import requests
