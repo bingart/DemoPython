@@ -5,6 +5,8 @@ import logging
 import time
 import datetime
 import random
+import os
+import signal
 from random import randint
 import requests
 from selenium import webdriver
@@ -151,6 +153,10 @@ class TrafficHelper:
             serviceArgs += ['--load-images=no'] 
             driver = webdriver.PhantomJS('/usr/bin/phantomjs', desired_capabilities=dcap, service_args=serviceArgs)
             driver.set_window_size(414, 736)
+            driver.cookies_enabled = False
+            pid = driver.service.process.pid
+            logging.info('open driver, pid={0}'.format(pid))
+            print('open driver, pid={0}'.format(pid))
             driver.get(url)
             html = driver.page_source
             logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
@@ -165,7 +171,13 @@ class TrafficHelper:
             print(err)
             logging.info('load exception, url={0}, err={1}'.format(url, err))        
         finally:
-            driver.close()
+            logging.info('close driver, pid={0}'.format(pid))
+            print('close driver, pid={0}'.format(pid))
+            # kill the specific phantomjs child proc
+            driver.service.process.send_signal(signal.SIGTERM)
+            # quit the node proc
+            driver.quit()
+            # another way is kill -9 and wait, to avoid defunct proceess
 
     def getNextTask(self):
         if True:
