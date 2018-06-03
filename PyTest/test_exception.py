@@ -9,6 +9,7 @@ import signal
 from random import randint
 import requests
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from stem.control import Controller
 from file_helper import FileHelper
 from mysql_helper import MySqlHelper
@@ -178,6 +179,44 @@ class TrafficHelper:
             driver.quit()
             # another way is kill -9 and wait, to avoid defunct proceess
 
+    def load2(self, url, delay):
+        try:
+            ua = self.getNextUA()
+            options = Options()
+            options.add_argument("--headless") # Runs Chrome in headless mode.
+            options.add_argument('--no-sandbox') # # Bypass OS security model
+            options.add_argument('start-maximized')
+            options.add_argument('disable-infobars')
+            options.add_argument("--disable-extensions")
+            options.add_argument("user-agent=" + ua)
+            options.add_argument("--proxy-server=socks5://{0}:{1}".format(self._rotHost, self._rotPort));
+            driver = webdriver.Chrome(chrome_options=options, executable_path='/root/chromedriver')
+            driver.set_window_size(414, 736)
+            pid = driver.service.process.pid
+            logging.info('open driver, pid={0}'.format(pid))
+            print('open driver, pid={0}'.format(pid))
+            driver.get(url)
+            html = driver.page_source
+            logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
+            print('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
+            
+            if delay > 0:
+                for i in range(delay):
+                    time.sleep(1)
+                    logging.info('sleep at {0}'.format(i))
+                    print('sleep at {0}'.format(i))
+        except Exception as err :
+            print(err)
+            logging.info('load exception, url={0}, err={1}'.format(url, err))        
+        finally:
+            logging.info('close driver, pid={0}'.format(pid))
+            print('close driver, pid={0}'.format(pid))
+            # kill the specific child proc
+            # driver.service.process.send_signal(signal.SIGTERM)
+            # quit the node proc
+            driver.quit()
+            # another way is kill -9 and wait, to avoid defunct proceess
+
     def getNextTask(self):
         if True:
             if len(self._taskList) == 0:
@@ -232,7 +271,8 @@ class TrafficHelper:
         # load all task item
         for taskItem in taskItemList:
             url = taskItem['url']
-            self.load(url, randint(10,20))
+            #self.load(url, randint(10,20))
+            self.load2(url, randint(10,20))
             logging.info('load task, url={0}'.format(url))
 
 def createOrUpdateNode(mysqlHelper, node, position, region):
