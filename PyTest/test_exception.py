@@ -305,17 +305,24 @@ def testIPLookup(count = 1):
         geoHelper = GeoHelper('GeoLite2-Country.mmdb')
         trafficHelper = TrafficHelper('./task.txt', './mobile_ua_list.txt', '127.0.0.1', 9350)
         for i in range(0, count, 1):
+
             rotHelper.reload()
             #rotHelper.setConf('ExitNodes', 'US,UK,FR')
             logging.info ('index={0}, reload'.format(i))
-            ipAddress = rotHelper.getIPAddress()
-            countryName, countryCode = geoHelper.getCountryInfo(ipAddress)            
-            logging.info ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
-                i, ipAddress, countryName, countryCode))
-            print('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
-                i, ipAddress, countryName, countryCode))
-            rotHelper.dump()
             
+            try:
+                ipAddress = rotHelper.getIPAddress()
+                countryName, countryCode = geoHelper.getCountryInfo(ipAddress)            
+                logging.info ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
+                    i, ipAddress, countryName, countryCode))
+                print('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
+                    i, ipAddress, countryName, countryCode))
+            except Exception as err2:
+                logging.info('getIPAddress  exception')        
+                time.sleep(5)
+                continue
+
+            rotHelper.dump()
             nodePairList = rotHelper.getPathInfo()
             for nodePair in nodePairList:
                 print (nodePair)
@@ -329,8 +336,7 @@ def testIPLookup(count = 1):
             trafficHelper.invoke()
             
     except Exception as err :
-        print(err)
-        logging.info('testIPLookup exception, {0}'.format(err))        
+        logging.info('testIPLookup exception')        
     finally:
         mysqlHelper.close()
         geoHelper.close()
