@@ -3,4 +3,5 @@ encoding//language/test_tuple.py=utf-8
 encoding/test_chrome.py=utf-8
 encoding/test_exception.py=utf-8
 encoding/test_geo.py=utf-8
+encoding/test_torrent.py=utf-8
 encoding/test_webdriver.py=utf-8
