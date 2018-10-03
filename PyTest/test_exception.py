@@ -1,6 +1,8 @@
 #coding=utf-8
 #Deprecated
 
+import sys
+import os
 import logging
 import time
 import datetime
@@ -159,6 +161,7 @@ class TrafficHelper:
             print('open driver, pid={0}'.format(pid))
             driver.get(url)
             html = driver.page_source
+            FileHelper.writeContent('/root/test.html', html)
             logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             print('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             
@@ -190,6 +193,8 @@ class TrafficHelper:
             options.add_argument("--disable-extensions")
             options.add_argument("user-agent=" + ua)
             options.add_argument("--proxy-server=socks5://{0}:{1}".format(self._rotHost, self._rotPort));
+            prefs = {"profile.managed_default_content_settings.images": 2}
+            options.add_experimental_option("prefs", prefs)
             driver = webdriver.Chrome(chrome_options=options, executable_path='/root/chromedriver')
             driver.set_window_size(414, 736)
             pid = driver.service.process.pid
@@ -197,6 +202,7 @@ class TrafficHelper:
             print('open driver, pid={0}'.format(pid))
             driver.get(url)
             html = driver.page_source
+            FileHelper.writeContent('/root/test.html', html)
             logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             print('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             
@@ -257,6 +263,8 @@ class TrafficHelper:
             return None
 
     def invoke(self):
+        logging.info('invoke begin')
+
         task = self.getNextTask()
         if task == None or (not 'taskItemList' in task):
             logging.info('no more task, return')
@@ -298,12 +306,12 @@ def createOrUpdateNode(mysqlHelper, node, position, region):
                 0)
         )
 
-def testIPLookup(count = 1):
+def testIPLookup(taskFilePath, torPort, count = 1, pagePerCount = 1):
     try:
-        rotHelper = RotHelper('127.0.0.1', 9351, 9350)
+        rotHelper = RotHelper('127.0.0.1', torPort + 1, torPort)
         mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'Bingart503', )
         geoHelper = GeoHelper('GeoLite2-Country.mmdb')
-        trafficHelper = TrafficHelper('./task.txt', './mobile_ua_list.txt', '127.0.0.1', 9350)
+        trafficHelper = TrafficHelper(taskFilePath, './mobile_ua_list.txt', '127.0.0.1', torPort)
         for i in range(0, count, 1):
 
             rotHelper.reload()
@@ -323,20 +331,29 @@ def testIPLookup(count = 1):
                 continue
 
             rotHelper.dump()
+            logging.info('dump ok')        
+
             nodePairList = rotHelper.getPathInfo()
-            for nodePair in nodePairList:
-                print (nodePair)
-                firstNode = nodePair[0]
-                lastNode = nodePair[1]
-                createOrUpdateNode(mysqlHelper, firstNode, ipAddress, countryName)
-                createOrUpdateNode(mysqlHelper, lastNode, ipAddress, countryName)
+            if len(nodePairList) > 0:
+                logging.info('getPathInfo ok')
+                for nodePair in nodePairList:
+                    print (nodePair)
+                    firstNode = nodePair[0]
+                    lastNode = nodePair[1]
+                    createOrUpdateNode(mysqlHelper, firstNode, ipAddress, countryName)
+                    createOrUpdateNode(mysqlHelper, lastNode, ipAddress, countryName)
+                    logging.info('createOrUpdateNode ok')
+            else:
+                logging.info('getPathInfo error')
+                return
                 
             time.sleep(5)
             
-            trafficHelper.invoke()
+            for j in range(0, pagePerCount):
+                trafficHelper.invoke()
             
     except Exception as err :
-        logging.info('testIPLookup exception')        
+        logging.info('testIPLookup exception, ' + str(err))        
     finally:
         mysqlHelper.close()
         geoHelper.close()
@@ -344,7 +361,7 @@ def testIPLookup(count = 1):
 
 def testTraffic():
     try:
-        rotHelper = RotHelper('127.0.0.1', 9351, 9350)
+        rotHelper = RotHelper('127.0.0.1', 9451, 9450)
         trafficHelper = TrafficHelper('./task.txt', './mobile_ua_list.txt', '127.0.0.1', 9350)
         rotHelper.reload()
         trafficHelper.invoke()
@@ -356,6 +373,21 @@ def testTraffic():
 
 if __name__=="__main__":
     print("main")
-    testIPLookup(20000)
+    print ('usage: python3 test_exception task_file_path tor_port run_count page_per_count')
+    taskFilePath = './task.txt'
+    torPort = 9050
+    runCount = 10000
+    pagePerCount = 1
+	
+    if len(sys.argv) == 5:
+        taskFilePath = sys.argv[1]
+        torPort = int(sys.argv[2])
+        runCount = int(sys.argv[3])
+        pagePerCount = int(sys.argv[4])
+	
+    logging.info('##################################################### start ######################################################')
+    testIPLookup(taskFilePath, torPort, runCount, pagePerCount)
+    #testIPLookup('./task.diabetes.txt', 9350, 20000, 2)
+    #testIPLookup('./task.txt', 9350, 20000)
     #testTraffic()
     print("exit")
