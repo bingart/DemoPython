@@ -46,11 +46,11 @@ def closeAllCircuit(controller):
 
 def get_conf(controller, key):
     value = controller.get_conf(key)
-    print ('get_config: key={0}, value={1}', key, value)
+    print ('get_config: key={0}, value={1}'.format(key, value))
 
 def set_conf(controller, key, value):
     controller.set_conf(key, value)
-    print ('set_config: key={0}, value={1}', key, value)
+    print ('set_config: key={0}, value={1}'.format(key, value))
     get_conf(controller, key)
 
 def main():
@@ -63,7 +63,7 @@ def main():
     try:
         controller.authenticate()
     except stem.connection.MissingPassword:
-        sys.exit(1)
+        pw = ''
 
     if len(sys.argv) == 1:
         print ('usage: py dump')
