@@ -46,7 +46,7 @@ class MySqlHelper:
 if __name__ == '__main__':
     try:
         helper = MySqlHelper('localhost', 3306, 'traffic', 'wp', 'wp', )
-        sql = "INSERT INTO `node`(`category`, `title`, `finger`, `historyPath`, `position`, `region`, `createTime`, `updateTime`, `state`, `errorCount`, `category`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql = "INSERT INTO `node`(`category`, `title`, `finger`, `historyPath`, `position`, `region`, `createTime`, `updateTime`, `state`, `errorCount`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         helper.executeOne(sql, ('EXIT', '1', 'bbbbb', 'history path', '45.79.95.201', 'US', '2018-05-07 01:00:00', '2018-05-07 01:00:00', 'OK', 0))
 
         sql = 'SELECT title, finger, historyPath, position, region, createTime, updateTime, state, errorCount, category FROM node WHERE finger = %s'
