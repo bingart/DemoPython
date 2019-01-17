@@ -326,7 +326,7 @@ def testIPLookup(taskFilePath, torPort, count = 1, pagePerCount = 1):
                 print('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
                     i, ipAddress, countryName, countryCode))
             except Exception as err2:
-                logging.info('getIPAddress  exception')        
+                logging.info('getIPAddress exception {0}'.format(err2))        
                 time.sleep(5)
                 continue
 
@@ -378,13 +378,13 @@ if __name__=="__main__":
     torPort = 9050
     runCount = 10000
     pagePerCount = 1
-	
+
     if len(sys.argv) == 5:
         taskFilePath = sys.argv[1]
         torPort = int(sys.argv[2])
         runCount = int(sys.argv[3])
         pagePerCount = int(sys.argv[4])
-	
+
     logging.info('##################################################### start ######################################################')
     testIPLookup(taskFilePath, torPort, runCount, pagePerCount)
     #testIPLookup('./task.diabetes.txt', 9350, 20000, 2)

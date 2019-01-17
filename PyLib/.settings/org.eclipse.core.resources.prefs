@@ -1,4 +1,6 @@
 eclipse.preferences.version=1
+encoding/file_helper.py=utf-8
 encoding/geo_helper.py=utf-8
 encoding/mysql_helper.py=utf-8
+encoding/rot_helper.py=utf-8
 encoding/str_helper.py=utf-8

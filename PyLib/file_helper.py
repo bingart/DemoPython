@@ -10,7 +10,30 @@ class FileHelper:
         logging.log("created")
     
     @staticmethod
-    def saveFileList(filePath, lineList, mode):
+    def readContent(filePath, encoding='utf-8'):
+        with open(filePath, 'r', encoding=encoding) as f:
+            content = f.read()
+        f.closed
+        return content
+        
+    @staticmethod
+    def writeContent(filePath, content, mode='w'):
+        file = open(filePath, mode, encoding='utf-8')
+        try:
+            file.write(content)
+        except Exception as err :
+            print(err)
+        finally:
+            file.close()
+
+    @staticmethod
+    def writeBinary(filePath, content):
+        outFile = open(filePath, "wb")
+        outFile.write(content)
+        outFile.close()
+        
+    @staticmethod
+    def saveFileList(filePath, lineList, mode='w'):
         file = open(filePath, mode, encoding='utf-8')
         for line in lineList:
             try:
@@ -20,16 +43,21 @@ class FileHelper:
         file.close()
     
     @staticmethod
-    def loadFileList(filePath) :
+    def loadFileList(filePath, encoding='utf-8', ignoreDuplicated = True):
         lineList = []
-        file = open(filePath, 'r', encoding='utf-8')
-        for line in file:
-            if line in lineList:
-                print ('line ignored, line=' + line)
-            else:
-                lineList.append(line.strip())
+        lineDict = {}
+        with open(filePath, 'r', encoding=encoding) as file:
+            for line in file:
+                if ignoreDuplicated:
+                    if line in lineDict:
+                        print ('line ignored, line=' + line)
+                    else:
+                        lineDict[line] = ''
+                        lineList.append(line.strip())
+                else:
+                    lineList.append(line)                    
         file.close()
-        print ("size of urlList=" + str(len(lineList)))
+        # print ("size of urlList=" + str(len(lineList)))
         return lineList
 
     @staticmethod
@@ -66,6 +94,9 @@ class FileHelper:
             print(err)
             return None
         
-
+if __name__=="__main__":
+    print("main")
+    FileHelper.writeContent('D:/a.txt', 'aa\n', 'a')
+    print("exit")
         
     
