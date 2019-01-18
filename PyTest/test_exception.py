@@ -16,122 +16,12 @@ from stem.control import Controller
 from file_helper import FileHelper
 from mysql_helper import MySqlHelper
 from geo_helper import GeoHelper
+from rot_helper import RotHelper
 
 FORMAT = '%(asctime)-15s:%(process)d: %(filename)s-%(lineno)d %(funcName)s: %(message)s'
 logging.basicConfig(format=FORMAT, filename='test_exception.log', level=logging.INFO)
 logging.info('Init: %s', 'started')
 
-class RotHelper:
-    
-    def __init__(self, host, controlPort, socksPort, password = None):
-        self._host = host
-        self._controlPort = controlPort
-        self._socksPort = socksPort
-        self._password = password
-        self._controller = Controller.from_port(address=self._host, port=self._controlPort)
-        self._controller.authenticate()
-        logging.info('created, host={0}, controlPort={1}, socksPort={2}'.format(self._host, self._controlPort, self._socksPort))
-
-    def close(self):
-        self._controller.close()
-            
-    def getIPAddress(self) :
-        proxies = {'http': 'socks5://' + self._host + ':' + str(self._socksPort)}
-        resp = requests.get('http://45.79.95.201/ip.php', proxies=proxies)
-        if resp.status_code == 200:
-            html = resp.content.decode('utf-8')
-            return html
-        else:
-            return "UNKNOWN"
-        
-    def reload(self):
-        circuits = self._controller.get_circuits()
-        cidList = []
-        for c in circuits:
-            cidList.append(c.id)    
-        for cid in cidList:
-            self._controller.close_circuit(cid)
-        logging.info ('reload')
-    
-    def getPathInfo(self):
-        circuits = self._controller.get_circuits()
-        nodePairList = []
-        for c in circuits:
-            if len(c.path) > 1:
-                firstNodeItem = None
-                lastNodeItem = None
-                firstNode = None
-                lastNode = None
-                path = ''
-                for nodeItem in c.path:
-                    if firstNodeItem == None:
-                        firstNodeItem = nodeItem
-                    lastNodeItem = nodeItem
-                    path += lastNodeItem[0] + ';'
-                
-                if firstNodeItem != None:
-                    firstNode = {
-                        'category': 'ENTRY',
-                        'finger': firstNodeItem[0],
-                        'title': firstNodeItem[1],
-                        'path': path,
-                    }
-                
-                if lastNodeItem != None:
-                    lastNode = {
-                        'category': 'EXIT',
-                        'finger': lastNodeItem[0],
-                        'title': lastNodeItem[1],
-                        'path': path,
-                    }
-                nodePairList.append([firstNode, lastNode])
-        return nodePairList
-    
-    def dump(self):
-        logging.info("running version %s" % self._controller.get_version())
-        logging.info("running pid %s" % self._controller.get_pid())
-        
-        circuits = self._controller.get_circuits()
-        logging.info('circuits=%d' % len(circuits))
-        for c in circuits:
-            logging.info('c: id={0}, status={1}, path={2}, purpose={3}'.format(c.id, c.status, c.path, c.purpose))
-            path = '{0}'.format(c.purpose)
-            for nodeItem in c.path:
-                logging.info ('nodeItem={0}'.format(nodeItem))
-                path += ';' + nodeItem[0] + ',' + nodeItem[1]
-            logging.info('c.path={0}'.format(path))
-                
-        streams = self._controller.get_streams()
-        logging.info('streams=%d' % len(streams))
-        for s in streams:
-            logging.info('s: id={0}, circ_id={1}, source_address={2}, target_address={3}'.format(s.id, s.circ_id, s.source_address, s.target_address))
-
-    def closeCircuit(self, cid):
-        self._controller.close_circuit(cid)
-        logging.info ('close circuit {0}'.format(cid))
-    
-    def closeAllCircuit(self):
-        circuits = self._controller.get_circuits()
-        logging.info('circuits=')
-        logging.info(circuits)
-        cidList = []
-        for c in circuits:
-            cidList.append(c.id)
-    
-        for cid in cidList:
-            self._controller.close_circuit(cid)
-        logging.info ('close all circuit')
-    
-    def getConf(self, key):
-        value = self._controller.get_conf(key)
-        logging.info ('get_config: key={0}, value={1}', key, value)
-    
-    def setConf(self, key, value):
-        self._controller.set_conf(key, value)
-        logging.info ('setConfig: key={0}, value={1}', key, value)
-        newValue = self.getConf(key)
-        logging.info ('setConfig: key={0}, new value={1}', key, newValue)
-        
 class TrafficHelper:
     def __init__(self, taskFilePath, uaFilePath, rotHost, rotPort):
         self._taskFilePath = taskFilePath
@@ -158,24 +48,19 @@ class TrafficHelper:
             driver.cookies_enabled = False
             pid = driver.service.process.pid
             logging.info('open driver, pid={0}'.format(pid))
-            print('open driver, pid={0}'.format(pid))
             driver.get(url)
             html = driver.page_source
-            FileHelper.writeContent('/root/test.html', html)
+            FileHelper.writeContent('/data/robot/test.html', html)
             logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
-            print('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             
             if delay > 0:
                 for i in range(delay):
                     time.sleep(1)
                     logging.info('sleep at {0}'.format(i))
-                    print('sleep at {0}'.format(i))
         except Exception as err :
-            print(err)
             logging.info('load exception, url={0}, err={1}'.format(url, err))        
         finally:
             logging.info('close driver, pid={0}'.format(pid))
-            print('close driver, pid={0}'.format(pid))
             # kill the specific phantomjs child proc
             driver.service.process.send_signal(signal.SIGTERM)
             # quit the node proc
@@ -199,24 +84,19 @@ class TrafficHelper:
             driver.set_window_size(414, 736)
             pid = driver.service.process.pid
             logging.info('open driver, pid={0}'.format(pid))
-            print('open driver, pid={0}'.format(pid))
             driver.get(url)
             html = driver.page_source
-            FileHelper.writeContent('/root/test.html', html)
+            FileHelper.writeContent('/data/robot/test.html', html)
             logging.info('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
-            print('load ok, url={0}, html.len={1}, delay={2}, ua={3}'.format(url, len(html), delay, ua))
             
             if delay > 0:
                 for i in range(delay):
                     time.sleep(1)
                     logging.info('sleep at {0}'.format(i))
-                    print('sleep at {0}'.format(i))
         except Exception as err :
-            print(err)
             logging.info('load exception, url={0}, err={1}'.format(url, err))        
         finally:
             logging.info('close driver, pid={0}'.format(pid))
-            print('close driver, pid={0}'.format(pid))
             # kill the specific child proc
             # driver.service.process.send_signal(signal.SIGTERM)
             # quit the node proc
@@ -309,9 +189,13 @@ def createOrUpdateNode(mysqlHelper, node, position, region):
 def testIPLookup(taskFilePath, torPort, count = 1, pagePerCount = 1):
     try:
         rotHelper = RotHelper('127.0.0.1', torPort + 1, torPort)
-        mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'Bingart503', )
+        logging.info ('rot ok')
+        mysqlHelper = MySqlHelper('localhost', 3306, 'traffic', 'sunfei', 'msnP@ssw0rd01!')
+        logging.info ('mysql ok')
         geoHelper = GeoHelper('GeoLite2-Country.mmdb')
+        logging.info ('geo ok')
         trafficHelper = TrafficHelper(taskFilePath, './mobile_ua_list.txt', '127.0.0.1', torPort)
+        logging.info ('traffic ok')
         for i in range(0, count, 1):
 
             rotHelper.reload()
@@ -321,12 +205,9 @@ def testIPLookup(taskFilePath, torPort, count = 1, pagePerCount = 1):
             try:
                 ipAddress = rotHelper.getIPAddress()
                 countryName, countryCode = geoHelper.getCountryInfo(ipAddress)            
-                logging.info ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
-                    i, ipAddress, countryName, countryCode))
-                print('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(
-                    i, ipAddress, countryName, countryCode))
+                logging.info ('index={0}, ipAddress={1}, countryName={2}, countryCode={3}'.format(i, ipAddress, countryName, countryCode))
             except Exception as err2:
-                logging.info('getIPAddress exception {0}'.format(err2))        
+                logging.info('getIPAddress  exception')        
                 time.sleep(5)
                 continue
 
@@ -345,7 +226,7 @@ def testIPLookup(taskFilePath, torPort, count = 1, pagePerCount = 1):
                     logging.info('createOrUpdateNode ok')
             else:
                 logging.info('getPathInfo error')
-                return
+                #return
                 
             time.sleep(5)
             
@@ -361,12 +242,11 @@ def testIPLookup(taskFilePath, torPort, count = 1, pagePerCount = 1):
 
 def testTraffic():
     try:
-        rotHelper = RotHelper('127.0.0.1', 9451, 9450)
+        rotHelper = RotHelper('127.0.0.1', 9351, 9350)
         trafficHelper = TrafficHelper('./task.txt', './mobile_ua_list.txt', '127.0.0.1', 9350)
         rotHelper.reload()
         trafficHelper.invoke()
     except Exception as err :
-        print(err)
         logging.info('test traffic error, {0}'.format(err))
     finally:
         rotHelper.close()
@@ -375,19 +255,19 @@ if __name__=="__main__":
     print("main")
     print ('usage: python3 test_exception task_file_path tor_port run_count page_per_count')
     taskFilePath = './task.txt'
-    torPort = 9050
+    torPort = 9350
     runCount = 10000
     pagePerCount = 1
-
+	
     if len(sys.argv) == 5:
         taskFilePath = sys.argv[1]
         torPort = int(sys.argv[2])
         runCount = int(sys.argv[3])
         pagePerCount = int(sys.argv[4])
-
+	
     logging.info('##################################################### start ######################################################')
     testIPLookup(taskFilePath, torPort, runCount, pagePerCount)
-    #testIPLookup('./task.diabetes.txt', 9350, 20000, 2)
-    #testIPLookup('./task.txt', 9350, 20000)
+    #testIPLookup('./task.diabetes.txt', torPort, 2, 2)
+    #testIPLookup('./task.txt', torPort, 20000)
     #testTraffic()
     print("exit")

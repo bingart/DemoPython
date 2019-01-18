@@ -8,6 +8,7 @@ import time
 import datetime
 import random
 import signal
+import requests
 from random import randint
 from stem.control import Controller
 
@@ -114,6 +115,18 @@ class RotHelper:
         newValue = self.getConf(key)
         logging.info ('setConfig: key={0}, new value={1}', key, newValue)
         
+    def getIPAddress(self) :
+        proxies = {
+            #'http': 'socks5://' + self._host + ':' + str(self._socksPort),
+            'https': 'socks5://' + self._host + ':' + str(self._socksPort)
+        }
+        resp = requests.get('https://www.infosoap.com/ip.php', proxies=proxies)
+        if resp.status_code == 200:
+            html = resp.content.decode('utf-8')
+            return html
+        else:
+            return "UNKNOWN"
+        
 if __name__=="__main__":
 
     logging.basicConfig(
@@ -125,5 +138,18 @@ if __name__=="__main__":
 
     logging.info("start")
     helper = RotHelper('127.0.0.1', 9351, 9350);
+
     helper.dump()
+
+    html = helper.getIPAddress()
+    logging.info("ip address={0}".format(html))
+    helper.reload()
+
+    html = helper.getIPAddress()
+    logging.info("ip address={0}".format(html))
+    helper.reload()
+
+    nodePairList = helper.getPathInfo()
+    logging.info("len of node={0}".format(len(nodePairList)))
+
     logging.info("exit")
