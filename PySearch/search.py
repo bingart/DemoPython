@@ -3,12 +3,10 @@
 
 import time
 import os
-import re
 import sys
 from file_helper import FileHelper
 from mongo_helper import MongoHelper
 from http_helper import HttpHelper
-from url_helper import UrlHelper
 from parse_helper import ParseHelper
 
 MONGO_HOST = "172.16.40.128:27017,172.16.40.140:27017,172.16.40.141:27017"
