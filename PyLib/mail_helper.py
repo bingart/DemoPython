@@ -72,10 +72,9 @@ if __name__=="__main__":
     print("main")
     
     if False:
-        helper = MailHelper('smtp.westwin.com', "feisun@westwin.com", "Bingart503", 587)
-        theFrom = "feisun@westwin.com"
-        theTos = ["feisun@westwin.com", "feisun@westwin.com"]
-        theTos = ["feisun@westwin.com"]
+        helper = MailHelper('smtp.westwin.com', "feisun@westwin.com", "password", 587)
+        theFrom = "o@westwin.com"
+        theTos = ["a@westwin.com", "b@westwin.com"]
         subject = "P123 Crawling Report"
         body = "test mail"
         for theTo in theTos:
@@ -88,9 +87,9 @@ if __name__=="__main__":
         helper.close()
     
     if True:
-        helper = MailHelper('smtp.mail.healthtopquestions.com', "newsletter@mail.healthtopquestions.com", "Bingart503")
+        helper = MailHelper('smtp.mail.healthtopquestions.com', "newsletter@mail.healthtopquestions.com", "password")
         theFrom = "newsletter@mail.healthtopquestions.com"
-        theTos = ["feisun@westwin.com"]
+        theTos = ["o@westwin.com"]
         text = 'healthtopquestions.com newsletter 2018-04-09'
         html = """\
             <html>

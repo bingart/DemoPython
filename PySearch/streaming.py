@@ -13,6 +13,8 @@ from http_helper import HttpHelper
 from url_helper import UrlHelper
 from parse_helper import ParseHelper
 
+from config import Configuration
+
 MONGO_HOST = "172.16.40.128:27017,172.16.40.140:27017,172.16.40.141:27017"
 MONGO_HOST = "127.0.0.1:27017"
 MONGO_DATABASE_NAME = "ZDBAmazon"
@@ -22,15 +24,17 @@ MONGO_TRACK_COLLECTION = "track"
 ROOT_PATH = 'E:/NutchData/pages/wpm'
 BACKUP_PATH = 'E:/NutchData/pages/backup'
 
+
 keyCollection = MongoHelper(MONGO_HOST, 27017, MONGO_DATABASE_NAME, MONGO_KEY_COLLECTION, "title")
 pageCollection = MongoHelper(MONGO_HOST, 27017, MONGO_DATABASE_NAME, MONGO_PAGE_COLLECTION, "url")
 trackCollection = MongoHelper(MONGO_HOST, 27017, MONGO_DATABASE_NAME, MONGO_TRACK_COLLECTION, "url")
-DOMAIN = 'http://www.infosoap.com'
-QUERY_URL = 'http://www.infosoap.com/wp-content/plugins/post-api/get_post_by_title.php?token=P@ssw0rd'
-INSERT_URL = 'http://www.infosoap.com/wp-content/plugins/post-api/insert_post.php?token=P@ssw0rd'
-DELETE_URL = 'http://www.infosoap.com/wp-content/plugins/post-api/delete_post.php?token=P@ssw0rd'
+ROOT_URL = 'https://' + Configuration.HOST_NAME
+QUERY_URL = ROOT_URL + '/wp-content/plugins/post-api/get_post_by_title.php?token=P@ssw0rd'
+INSERT_URL = ROOT_URL + '/wp-content/plugins/post-api/insert_post.php?token=P@ssw0rd'
+DELETE_URL = ROOT_URL + '/wp-content/plugins/post-api/delete_post.php?token=P@ssw0rd'
 DELI = '____'
-PERMALINKS_URL = 'http://www.infosoap.com/wp-content/plugins/post-tester/get_all_permalinks.php'
+PERMALINKS_URL = ROOT_URL + '/wp-content/plugins/post-tester/get_all_permalinks.php'
+DOWNLOAD_URL = ROOT_URL
 
 def uploadPage(source):
     try:
@@ -51,7 +55,7 @@ def uploadPage(source):
                 req = {
                     'title': doc['title']
                 }
-                errorCode, rsp = HttpHelper.post(DOMAIN + QUERY_URL, req)
+                errorCode, rsp = HttpHelper.post(QUERY_URL, req)
                 if errorCode != 'OK':
                     raise Exception('query error, url=' + doc['url'])
                 if rsp['errorCode'] == 'ERROR':
@@ -97,7 +101,7 @@ def downloadTrackingLog(siteName, logDate = None):
         now = datetime.now()
         logDate = now.strftime('%Y%m%d')
     logFileName = '{0}.{1}.log'.format(siteName, logDate)
-    url = 'http://:45.79.95.201/logs/{0}.{1}.log'.format(siteName, logDate)
+    url = DOWNLOAD_URL + '/logs/{0}.{1}.log'.format(siteName, logDate)
     statusCode, html, finalUrl = HttpHelper.fetch(url)
     if statusCode == 200 and html != None and len(html) > 0:
         filePath = ROOT_PATH + '/' + logFileName

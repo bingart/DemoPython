@@ -9,6 +9,8 @@ from mongo_helper import MongoHelper
 from http_helper import HttpHelper
 from parse_helper import ParseHelper
 
+from config import Configuration
+
 MONGO_HOST = "172.16.40.128:27017,172.16.40.140:27017,172.16.40.141:27017"
 #MONGO_HOST = "127.0.0.1:27017"
 MONGO_DATABASE_NAME = "ZDBWordPress"
@@ -16,13 +18,13 @@ MONGO_SEED_COLLECTION = "seed"
 MONGO_KEY_COLLECTION = "key"
 MONGO_PAGE_COLLECTION = "page"
 MONGO_TRACK_COLLECTION = "track"
-SEARCH_KEY_PATTERN = 'http://healthtopquestions.com/wp-content/plugins/post-tester/bingapi.php?token=P@ssw0rd&t=web&q="{0}"&offset={1}&count={2}'
-SEARCH_KEY_PATTERN = 'http://www.infosoap.com/wp-content/plugins/post-tester/bingapi.php?token=P@ssw0rd&t=web&q="{0}"&offset={1}&count={2}'
-SEARCH_PAGE_PATTERN = 'http://healthtopquestions.com/wp-content/plugins/post-tester/bingapi.php?token=P@ssw0rd&t=web&q="{0}"%20wordpress&offset={1}&count={2}'
-SEARCH_PAGE_PATTERN = 'http://www.infosoap.com/wp-content/plugins/post-tester/bingapi.php?token=P@ssw0rd&t=web&q="{0}"%20wordpress&offset={1}&count={2}'
+
+ROOT_URL = "https://" + Configuration.HOST_NAME
+SEARCH_KEY_PATTERN = ROOT_URL + '/wp-content/plugins/post-tester/bingapi.php?token=P@ssw0rd&t=web&q="{0}"&offset={1}&count={2}'
+SEARCH_PAGE_PATTERN = ROOT_URL + '/wp-content/plugins/post-tester/bingapi.php?token=P@ssw0rd&t=web&q="{0}"%20wordpress&offset={1}&count={2}'
 BLACK_SITE_LIST = ['webmd.com', 'drugs.com']
 ROOT_PATH = 'E:/NutchData/pages/wordpress'
-INSERT_URL = 'http://www.infosoap.com/wp-content/plugins/post-api/insert_post.php?token=P@ssw0rd'
+INSERT_URL = ROOT_URL + '/wp-content/plugins/post-api/insert_post.php?token=P@ssw0rd'
 
 if not os.path.exists(ROOT_PATH):
     os.makedirs(ROOT_PATH, exist_ok=True)
