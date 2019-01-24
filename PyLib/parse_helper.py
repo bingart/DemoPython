@@ -6,6 +6,7 @@ from url_helper import UrlHelper
 from str_helper import StrHelper
 from nlp_helper import NLPHelper
 from crypt_helper import CryptHelper
+from file_helper import FileHelper
 
 class ParseHelper:
     
@@ -187,10 +188,63 @@ class ParseHelper:
         }
         return [found, doc]
 
+    @staticmethod
+    def parseWordPressContent(html, isInnerHtml):
+        titleValue = None
+        descriptionValue = None
+        contentValue = None
+        
+        soup = BeautifulSoup(html)    
+
+        title = soup.find("title")
+        if title != None:
+            titleValue = title.text
+        else:
+            ogTitle = soup.find("meta", {"property": "og:title"})
+            if ogTitle != None:
+                titleValue = ogTitle.get("content")
+        
+        description = soup.find("meta", {"name": "description"})
+        if description != None:
+            descriptionValue = description.get("content")
+        else:
+            ogDescription = soup.find("meta", {"property": "og:description"})
+            if ogDescription != None:
+                descriptionValue = ogDescription.get("content")
+
+        scripts = soup.findAll(['script', 'style', 'iframe'])
+        for match in scripts:
+            match.decompose()
+            
+        divList = soup.select("div#content")
+        if (len(divList) == 1):
+            if isInnerHtml:
+                contentValue = divList[0].encode_contents().decode('utf-8')
+            else:
+                contentValue = str(divList[0])
+
+        if contentValue == None:
+            divList = soup.select("div.content")
+            if (len(divList) == 1):
+                if isInnerHtml:
+                    contentValue = divList[0].encode_contents().decode('utf-8')
+                else:
+                    contentValue = str(divList[0])
+
+        return titleValue, descriptionValue, contentValue
+
 if __name__=="__main__":
     print("main")
     title = "abc Hello 123 &$#"
     slug = ParseHelper.title2slug(title)
     print (slug)
+    
+    html = FileHelper.readContent('./resource/wp_id_content.html')
+    titleValue, descriptionValue, contentValue = ParseHelper.parseWordPressContent(html, True)
+    if contentValue != None:
+        print(len(contentValue))
 
-        
+    html = FileHelper.readContent('./resource/wp_class_content.html')
+    content = ParseHelper.parseWordPressContent(html, True)
+    if content != None:
+        print(len(content))
