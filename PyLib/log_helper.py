@@ -1,11 +1,19 @@
 # coding=utf-8
 
-
-import datetime
+import logging
 
 class LogHelper:
     
     @staticmethod
-    def log (content):
-        print (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + content)
-
+    def init(logFilePath, isStdout = True):
+        logHandlers = [
+            logging.FileHandler(logFilePath)
+        ]
+        if isStdout:
+            logHandlers.append(logging.StreamHandler())
+            
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(filename)s[line:%(lineno)d] [%(levelname)s] %(message)s",
+            handlers = logHandlers   
+        )
